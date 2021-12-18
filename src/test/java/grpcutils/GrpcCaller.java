@@ -14,6 +14,8 @@ public class GrpcCaller {
 	private String protoSource;
 	private String protoFile;
 
+	private static final int OK_CODE = 0;
+
 	public GrpcCaller(
 		String host, boolean isSecure,
 		String protoSource, String protoFile
@@ -57,17 +59,16 @@ public class GrpcCaller {
 		processBuilder.directory(new File(System.getProperty("user.dir")));
 		Process process = processBuilder.start();
 
-		StringBuilder output = new StringBuilder();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		String line;
-		while ((line = reader.readLine()) != null) {
-			output.append(line.trim());
+		BufferedReader bufferedReader;
+		int exitCode = process.waitFor();
+		if (exitCode == OK_CODE) {
+			bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		} else {
+			bufferedReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 		}
 
-		int exitCode = process.waitFor();
-		if (exitCode != 0) {
-			return "Exit code: " + exitCode;
-		}
+		StringBuilder output = new StringBuilder();
+		bufferedReader.lines().forEach(line -> output.append(line.trim()));
 		return output.toString();
 	}
 }
