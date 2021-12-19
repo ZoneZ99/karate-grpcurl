@@ -1,5 +1,8 @@
 package grpcutils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -67,8 +70,11 @@ public class GrpcCaller {
 			bufferedReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 		}
 
-		StringBuilder output = new StringBuilder();
-		bufferedReader.lines().forEach(line -> output.append(line.trim()));
-		return output.toString();
+		StringBuilder outputBuilder = new StringBuilder();
+		bufferedReader.lines().forEach(line -> outputBuilder.append(line.trim()));
+		String output = outputBuilder.toString();
+
+		final JsonMapper jsonMapper = new JsonMapper();
+		return jsonMapper.readerFor(JsonNode.class).readValues(output).readAll().toString();
 	}
 }

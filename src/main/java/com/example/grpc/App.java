@@ -6,7 +6,7 @@ public class App
 {
     public static void main( String[] args ) throws Exception
     {
-      // Create a new server to listen on port 8080
+      // Create a new server to listen on port 8181
       Server server = ServerBuilder.forPort(8181)
         .addService(new GreetingServiceImpl())
         .build();
