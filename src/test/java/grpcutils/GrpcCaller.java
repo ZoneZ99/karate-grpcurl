@@ -10,6 +10,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/*
+	Author: https://github.com/ZoneZ99
+ */
 public class GrpcCaller {
 
 	private String host;
