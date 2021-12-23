@@ -62,12 +62,12 @@ public class GreetingServiceImpl extends GreetingServiceGrpc.GreetingServiceImpl
 		StreamObserver<GreetingServiceOuterClass.HelloResponse> responseObserver
 	) {
 		return new StreamObserver<GreetingServiceOuterClass.HelloRequest>() {
-			String name;
+			StringBuilder nameConcat = new StringBuilder();
 			List<String> hobbies = new ArrayList<>();
 
 			@Override
 			public void onNext(GreetingServiceOuterClass.HelloRequest helloRequest) {
-				this.name = helloRequest.getName();
+				this.nameConcat.append(helloRequest.getName());
 				this.hobbies.addAll(helloRequest.getHobbiesList());
 			}
 
@@ -80,7 +80,7 @@ public class GreetingServiceImpl extends GreetingServiceGrpc.GreetingServiceImpl
 			public void onCompleted() {
 				GreetingServiceOuterClass.HelloResponse response =
 					GreetingServiceOuterClass.HelloResponse.newBuilder()
-						.setGreeting(this.name)
+						.setGreeting(this.nameConcat.toString())
 						.addAllHobbies(this.hobbies)
 						.setInner(
 							GreetingServiceOuterClass.InnerStruct.newBuilder()
@@ -105,20 +105,19 @@ public class GreetingServiceImpl extends GreetingServiceGrpc.GreetingServiceImpl
 
 			@Override
 			public void onNext(GreetingServiceOuterClass.HelloRequest helloRequest) {
-				for (int i = 0; i < 10; i++) {
-					GreetingServiceOuterClass.HelloResponse response = GreetingServiceOuterClass.HelloResponse.newBuilder()
-						.setGreeting(helloRequest.getName())
-						.addAllHobbies(helloRequest.getHobbiesList())
-						.setInner(
-							GreetingServiceOuterClass.InnerStruct.newBuilder()
-								.setValue("Inner")
-								.addRepeated("Repeated List")
-								.build()
-						)
-						.build();
-					System.out.println("Bidirectional stream response " + i + " : " + response);
-					responseObserver.onNext(response);
-				}
+				GreetingServiceOuterClass.HelloResponse response = GreetingServiceOuterClass.HelloResponse.newBuilder()
+					.setGreeting(helloRequest.getName())
+					.addAllHobbies(helloRequest.getHobbiesList())
+					.setInner(
+						GreetingServiceOuterClass.InnerStruct.newBuilder()
+							.setValue("Inner")
+							.addRepeated("Repeated List")
+							.build()
+					)
+					.build();
+
+				System.out.println("Bidirectional stream response: " + response);
+				responseObserver.onNext(response);
 			}
 
 			@Override

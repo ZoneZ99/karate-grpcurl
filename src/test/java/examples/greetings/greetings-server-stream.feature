@@ -1,7 +1,7 @@
 Feature: Test GRPC Server Stream
 
   Background:
-    * def GrpcCallerBuilder = Java.type("grpcutils.GrpcCallerBuilder");
+    * def GrpcCallerBuilder = Java.type("grpcutils.GrpcCurlBuilder");
     * def client =
       """
       new GrpcCallerBuilder()
@@ -13,22 +13,22 @@ Feature: Test GRPC Server Stream
       """
 
   Scenario: Test with name
-    * def requestBody = { "name": "Tester" }
-    * def result = client.call("com.example.grpc.GreetingService.greetingServerStream", JSON.stringify(requestBody))
+    * def requestBody = [{ "name": "Tester" }]
+    * def result = client.call("com.example.grpc.GreetingService.greetingServerStream", requestBody)
     * print result
     * def responseBody = JSON.parse(result)
     * match responseBody == "#[_ == 10]"
 
   Scenario: Test with empty name
-    * def requestBody = { "name": "" }
-    * def result = client.call("com.example.grpc.GreetingService.greetingServerStream", JSON.stringify(requestBody))
+    * def requestBody = [{ "name": "" }]
+    * def result = client.call("com.example.grpc.GreetingService.greetingServerStream", requestBody)
     * print result
     * def responseBody = JSON.parse(result)
     * match responseBody == "#[_ == 10]"
 
   Scenario: Test with empty request body
-    * def requestBody = {}
-    * def result = client.call("com.example.grpc.GreetingService.greetingServerStream", JSON.stringify(requestBody))
+    * def requestBody = [{}]
+    * def result = client.call("com.example.grpc.GreetingService.greetingServerStream", requestBody)
     * print result
     * def responseBody = JSON.parse(result)
     * match responseBody == "#[_ == 10]"

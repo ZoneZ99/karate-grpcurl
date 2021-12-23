@@ -1,19 +1,20 @@
 package grpcutils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /*
 	Author: https://github.com/ZoneZ99
  */
-public class GrpcCaller {
+public class GrpcCurl implements GrpcCaller {
 
 	private String host;
 	private boolean isSecure;
@@ -22,7 +23,7 @@ public class GrpcCaller {
 
 	private static final int OK_CODE = 0;
 
-	public GrpcCaller(
+	public GrpcCurl(
 		String host, boolean isSecure,
 		String protoSource, String protoFile
 	) {
@@ -32,20 +33,20 @@ public class GrpcCaller {
 		this.protoFile = protoFile;
 	}
 
-	public String call(String method, String requestBody) {
+	public String call(String method, List<Map<String, Object>> requestBody) {
 		try {
-			String[] command = this.buildCommand(method, requestBody);
-			return this.executeCommand(command);
+			String[] command = this.buildCommand(method);
+			return this.executeCommand(command, requestBody);
 		} catch (IOException | InterruptedException e) {
 			return e.getMessage();
 		}
 	}
 
-	private String[] buildCommand(String method, String requestBody) {
+	private String[] buildCommand(String method) {
 		ArrayList<String> commandParts = new ArrayList<>(Arrays.asList(
 			"grpcurl",
 			"-d",
-			requestBody,
+			"@",
 			"-import-path",
 			this.protoSource,
 			"-proto",
@@ -59,31 +60,40 @@ public class GrpcCaller {
 		return commandParts.toArray(new String[0]);
 	}
 
-	private String executeCommand(String[] command) throws IOException, InterruptedException {
+	private String executeCommand(String[] command, List<Map<String, Object>> input) throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder();
 		processBuilder.command(command);
 		processBuilder.directory(new File(System.getProperty("user.dir")));
 		Process process = processBuilder.start();
+		OutputStream stdin = process.getOutputStream();
+
+		try (BufferedWriter inputWriter = new BufferedWriter(new OutputStreamWriter(stdin))) {
+			ObjectMapper objectMapper = new ObjectMapper();
+			for (Map<String, Object> messageMap : input) {
+				String message = objectMapper.writeValueAsString(messageMap);
+				inputWriter.write(message);
+				inputWriter.flush();
+			}
+		}
+		int exitCode = process.waitFor();
 
 		BufferedReader bufferedReader;
-		int exitCode = process.waitFor();
 		if (exitCode == OK_CODE) {
 			bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		} else {
 			bufferedReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 		}
 
-		return this.processCallResult(bufferedReader);
+		StringBuilder outputBuilder = new StringBuilder();
+		bufferedReader.lines().forEach(l -> outputBuilder.append(l.trim()));
+
+		return this.processCallResult(outputBuilder.toString());
 	}
 
-	private String processCallResult(BufferedReader bufferedReader) throws IOException {
-		StringBuilder outputBuilder = new StringBuilder();
-		bufferedReader.lines().forEach(line -> outputBuilder.append(line.trim()));
-		String output = outputBuilder.toString();
-
-		if (!output.startsWith("{") || !output.endsWith("}")) {
-			return output;
+	private String processCallResult(String rawResult) throws IOException {
+		if (!rawResult.startsWith("{") || !rawResult.endsWith("}")) {
+			return rawResult;
 		}
-		return new JsonMapper().readerFor(JsonNode.class).readValues(output).readAll().toString();
+		return new JsonMapper().readerFor(JsonNode.class).readValues(rawResult).readAll().toString();
 	}
 }

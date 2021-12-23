@@ -1,7 +1,7 @@
 Feature: Test GRPC Unary
 
   Background:
-    * def GrpcCallerBuilder = Java.type("grpcutils.GrpcCallerBuilder");
+    * def GrpcCallerBuilder = Java.type("grpcutils.GrpcCurlBuilder");
     * def client =
       """
       new GrpcCallerBuilder()
@@ -13,22 +13,22 @@ Feature: Test GRPC Unary
       """
 
   Scenario: Test with name
-    * def requestBody = { "name": "Tester" }
-    * def result = client.call("com.example.grpc.GreetingService.greeting", JSON.stringify(requestBody))
+    * def requestBody = [{ "name": "Tester" }]
+    * def result = client.call("com.example.grpc.GreetingService.greeting", requestBody)
     * print result
     * def responseBody = JSON.parse(result)
-    * match responseBody[0].greeting == requestBody.name
+    * match responseBody[0].greeting == requestBody[0].name
 
   Scenario: Test with empty name
-    * def requestBody = { "name": "" }
-    * def result = client.call("com.example.grpc.GreetingService.greeting", JSON.stringify(requestBody))
+    * def requestBody = [{ "name": "" }]
+    * def result = client.call("com.example.grpc.GreetingService.greeting", requestBody)
     * print result
     * def responseBody = JSON.parse(result)
     * match responseBody[0] !contains { "name": "#string" }
 
   Scenario: Test with empty request body
-    * def requestBody = {}
-    * def result = client.call("com.example.grpc.GreetingService.greeting", JSON.stringify(requestBody))
+    * def requestBody = [{}]
+    * def result = client.call("com.example.grpc.GreetingService.greeting", requestBody)
     * print result
     * def responseBody = JSON.parse(result)
     * match responseBody[0] !contains { "name": "#string" }
