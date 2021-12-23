@@ -6,10 +6,12 @@ This proof-of-concept presents a way to perform functional test on gRPC services
 
 [grpcurl](https://github.com/fullstorydev/grpcurl) is used to call the desired gRPC service using Java code.
 
+Request body and response are in the form of JSON array to support streaming requests and responses.
+See [greetings-unary.feature](src/test/java/examples/greetings/greetings-unary.feature) for an example of how test scenario(s) should be written.
+
 ### Limitations
 
 - Calling `grpcurl` requires having related `.proto` files for the system under test (SUT) under the `test/proto/` directory, regardless whether the SUT has enabled gRPC reflection.
-- JSON string returned by server will be in the form of JSON array, regardless of how many responses returned by server.
 
 ## Prerequisites
 
