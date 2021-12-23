@@ -1,4 +1,4 @@
-Feature: Test GRPC
+Feature: Test GRPC Server Stream
 
   Background:
     * def GrpcCallerBuilder = Java.type("grpcutils.GrpcCallerBuilder");

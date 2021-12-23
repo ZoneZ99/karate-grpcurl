@@ -73,11 +73,17 @@ public class GrpcCaller {
 			bufferedReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 		}
 
+		return this.processCallResult(bufferedReader);
+	}
+
+	private String processCallResult(BufferedReader bufferedReader) throws IOException {
 		StringBuilder outputBuilder = new StringBuilder();
 		bufferedReader.lines().forEach(line -> outputBuilder.append(line.trim()));
 		String output = outputBuilder.toString();
 
-		final JsonMapper jsonMapper = new JsonMapper();
-		return jsonMapper.readerFor(JsonNode.class).readValues(output).readAll().toString();
+		if (!output.startsWith("{") || !output.endsWith("}")) {
+			return output;
+		}
+		return new JsonMapper().readerFor(JsonNode.class).readValues(output).readAll().toString();
 	}
 }

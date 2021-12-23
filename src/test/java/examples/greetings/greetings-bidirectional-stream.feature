@@ -1,4 +1,4 @@
-Feature: Test GRPC
+Feature: Test GRPC Bidirectional Stream
 
   Background:
     * def GrpcCallerBuilder = Java.type("grpcutils.GrpcCallerBuilder");
